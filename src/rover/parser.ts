@@ -1,6 +1,11 @@
 /**
  * Input parser for Mars Rover simulation.
  * Validates input format and throws descriptive errors on invalid input.
+ * 
+ * Performance characteristics:
+ * - O(n) time complexity where n = number of input lines
+ * - Single-pass parsing with eager validation
+ * - Minimal allocations: only creates necessary data structures
  */
 
 import type { Direction, Plateau, RoverState, ParsedInput } from './types';
@@ -16,7 +21,9 @@ const VALID_COMMANDS = /^[LRM]+$/;
  *     - Position line: "x y D" (e.g., "1 2 N")
  *     - Commands line: sequence of L/R/M (e.g., "LMLMLMLMM")
  *
- * Throws Error with descriptive message on invalid input.
+ * @param input - Raw input string with newline-separated commands
+ * @returns Parsed plateau and rover data
+ * @throws Error with descriptive message on invalid input
  */
 export function parseInput(input: string): ParsedInput {
   const lines = input

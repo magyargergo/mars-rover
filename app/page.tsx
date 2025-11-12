@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { parseInput } from '@/src/rover/parser';
 import { executeCommands } from '@/src/rover/engine';
 import { formatOutput } from '@/src/rover/format';
@@ -15,20 +15,25 @@ export default function MarsRoverPage() {
   const [input, setInput] = useState(SAMPLE_INPUT);
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
+  const [isPending, startTransition] = useTransition();
 
   const handleRunSimulation = () => {
-    try {
-      setError('');
-      const parsed = parseInput(input);
-      const finalStates = parsed.rovers.map((rover) =>
-        executeCommands(rover.start, rover.commands, parsed.plateau)
-      );
-      const result = formatOutput(finalStates);
-      setOutput(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      setOutput('');
-    }
+    startTransition(() => {
+      try {
+        setError('');
+        setOutput('');
+        
+        const parsed = parseInput(input);
+        const finalStates = parsed.rovers.map((rover) =>
+          executeCommands(rover.start, rover.commands, parsed.plateau)
+        );
+        const result = formatOutput(finalStates);
+        setOutput(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setOutput('');
+      }
+    });
   };
 
   return (
@@ -56,9 +61,10 @@ export default function MarsRoverPage() {
 
         <button
           onClick={handleRunSimulation}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded mb-6"
+          disabled={isPending}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded mb-6 transition-colors"
         >
-          Run Simulation
+          {isPending ? 'Running Simulation...' : 'Run Simulation'}
         </button>
 
         {error && (

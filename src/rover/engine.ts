@@ -1,6 +1,10 @@
 /**
  * Core Mars Rover simulation engine.
  * Uses numerical direction encoding (0=N, 1=E, 2=S, 3=W) for efficient rotation.
+ * 
+ * Performance characteristics:
+ * - O(n) time complexity where n = command string length
+ * - O(1) space complexity (no intermediate allocations)
  */
 
 import type { Direction, RoverState, Plateau } from './types';
@@ -11,17 +15,20 @@ const DIRECTIONS: readonly Direction[] = ['N', 'E', 'S', 'W'] as const;
 // Map direction to numerical encoding
 const DIR_TO_NUM: Record<Direction, number> = { N: 0, E: 1, S: 2, W: 3 };
 
-// Movement deltas for each direction: [dx, dy]
-const DELTAS: ReadonlyArray<readonly [number, number]> = [
-  [0, 1],  // N: +y
-  [1, 0],  // E: +x
-  [0, -1], // S: -y
-  [-1, 0], // W: -x
-];
+// Movement deltas for each direction: dx values
+const DX: readonly number[] = [0, 1, 0, -1] as const; // N, E, S, W
+
+// Movement deltas for each direction: dy values
+const DY: readonly number[] = [1, 0, -1, 0] as const; // N, E, S, W
 
 /**
  * Executes a sequence of commands on a rover.
  * Commands are processed in order; invalid moves (out of bounds) are ignored.
+ * 
+ * @param start - Initial rover state (position and direction)
+ * @param commands - String of commands (L=left, R=right, M=move)
+ * @param plateau - Plateau boundaries (0,0) to (maxX, maxY)
+ * @returns Final rover state after executing all valid commands
  */
 export function executeCommands(
   start: RoverState,
@@ -43,9 +50,8 @@ export function executeCommands(
       dirNum = (dirNum + 1) % 4;
     } else if (cmd === 'M') {
       // Move forward in current direction
-      const [dx, dy] = DELTAS[dirNum];
-      const newX = x + dx;
-      const newY = y + dy;
+      const newX = x + DX[dirNum];
+      const newY = y + DY[dirNum];
 
       // Only move if within plateau bounds
       if (newX >= 0 && newX <= plateau.maxX && newY >= 0 && newY <= plateau.maxY) {
