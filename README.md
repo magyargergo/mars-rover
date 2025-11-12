@@ -15,7 +15,7 @@ mars-rover/
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx                    # Main UI component
-├── src/
+├── lib/
 │   └── rover/
 │       ├── __tests__/
 │       │   ├── engine.test.ts      # Movement and rotation tests
