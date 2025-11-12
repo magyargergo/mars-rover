@@ -1,65 +1,101 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { parseInput } from '@/src/rover/parser';
+import { executeCommands } from '@/src/rover/engine';
+import { formatOutput } from '@/src/rover/format';
+
+const SAMPLE_INPUT = `5 5
+1 2 N
+LMLMLMLMM
+3 3 E
+MMRMMRMRRM`;
+
+export default function MarsRoverPage() {
+  const [input, setInput] = useState(SAMPLE_INPUT);
+  const [output, setOutput] = useState('');
+  const [error, setError] = useState('');
+
+  const handleRunSimulation = () => {
+    try {
+      setError('');
+      const parsed = parseInput(input);
+      const finalStates = parsed.rovers.map((rover) =>
+        executeCommands(rover.start, rover.commands, parsed.plateau)
+      );
+      const result = formatOutput(finalStates);
+      setOutput(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setOutput('');
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-4xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mars Rover Simulation</h1>
+          <p className="text-gray-900">
+            Enter plateau coordinates and rover commands. Format: plateau size,
+            then pairs of (position + heading, commands).
           </p>
+        </header>
+
+        <div className="mb-6">
+          <label htmlFor="input" className="block font-medium text-gray-900 mb-2">
+            Input
+          </label>
+          <textarea
+            id="input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="w-full h-48 p-3 border border-gray-400 rounded font-mono text-sm text-gray-900 bg-white"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <button
+          onClick={handleRunSimulation}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded mb-6"
+        >
+          Run Simulation
+        </button>
+
+        {error && (
+          <div className="bg-red-50 border border-red-400 rounded p-4 mb-6">
+            <h2 className="font-semibold text-red-900 mb-1">Error</h2>
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+
+        {output && (
+          <div className="mb-6">
+            <label className="block font-medium text-gray-900 mb-2">Output</label>
+            <pre className="p-3 bg-white border border-gray-400 rounded font-mono text-sm text-gray-900">
+              {output}
+            </pre>
+          </div>
+        )}
+
+        <div className="bg-blue-50 border border-blue-300 rounded p-4">
+          <h2 className="font-semibold text-gray-900 mb-2">Input Format</h2>
+          <ul className="text-sm text-gray-900 space-y-1">
+            <li>• Line 1: Plateau max coordinates (e.g., &quot;5 5&quot;)</li>
+            <li>
+              • For each rover:
+              <ul className="ml-4 mt-1">
+                <li>- Position line: &quot;x y Direction&quot; (e.g., &quot;1 2 N&quot;)</li>
+                <li>
+                  - Commands line: L (left), R (right), M (move) (e.g.,
+                  &quot;LMLMLMLMM&quot;)
+                </li>
+              </ul>
+            </li>
+            <li>• Directions: N (north), E (east), S (south), W (west)</li>
+            <li>• Out-of-bounds moves are ignored; rover stays in place</li>
+          </ul>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
