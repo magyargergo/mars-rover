@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { parseInput } from '@/src/rover/parser';
-import { executeCommands } from '@/src/rover/engine';
-import { formatOutput } from '@/src/rover/format';
+import { parseInput } from '@/lib/rover/parser';
+import { executeCommands } from '@/lib/rover/engine';
+import { formatOutput } from '@/lib/rover/format';
 
 const SAMPLE_INPUT = `5 5
 1 2 N
